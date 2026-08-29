@@ -597,3 +597,688 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
 });
+
+
+// <script>
+(function () {
+
+    const hero = document.querySelector(".epx-hero");
+
+    if (!hero) return;
+
+    const slides = hero.querySelectorAll(".epx-slide");
+    const dots = hero.querySelectorAll(".epx-dot");
+
+    const next = hero.querySelector(".epx-next");
+    const prev = hero.querySelector(".epx-prev");
+
+    let current = 0;
+    let timer;
+
+
+    function showSlide(index) {
+
+        if (index >= slides.length) {
+            index = 0;
+        }
+
+        if (index < 0) {
+            index = slides.length - 1;
+        }
+
+        slides.forEach(function (slide, i) {
+
+            slide.classList.toggle(
+                "epx-slide-active",
+                i === index
+            );
+
+        });
+
+        dots.forEach(function (dot, i) {
+
+            dot.classList.toggle(
+                "epx-dot-active",
+                i === index
+            );
+
+        });
+
+        current = index;
+    }
+
+
+    function nextSlide() {
+        showSlide(current + 1);
+    }
+
+
+    function prevSlide() {
+        showSlide(current - 1);
+    }
+
+
+    function startSlider() {
+
+        clearInterval(timer);
+
+        timer = setInterval(function () {
+
+            nextSlide();
+
+        }, 6000);
+
+    }
+
+
+    next.addEventListener("click", function () {
+
+        nextSlide();
+        startSlider();
+
+    });
+
+
+    prev.addEventListener("click", function () {
+
+        prevSlide();
+        startSlider();
+
+    });
+
+
+    dots.forEach(function (dot, index) {
+
+        dot.addEventListener("click", function () {
+
+            showSlide(index);
+            startSlider();
+
+        });
+
+    });
+
+
+    /* Touch swipe */
+
+    let startX = 0;
+
+    hero.addEventListener(
+        "touchstart",
+        function (e) {
+
+            startX = e.changedTouches[0].screenX;
+
+        },
+        { passive: true }
+    );
+
+
+    hero.addEventListener(
+        "touchend",
+        function (e) {
+
+            const endX = e.changedTouches[0].screenX;
+
+            const distance = startX - endX;
+
+            if (Math.abs(distance) < 50) return;
+
+            if (distance > 0) {
+                nextSlide();
+            } else {
+                prevSlide();
+            }
+
+            startSlider();
+
+        },
+        { passive: true }
+    );
+
+
+    /* Pause while mouse is over hero */
+
+    hero.addEventListener("mouseenter", function () {
+        clearInterval(timer);
+    });
+
+    hero.addEventListener("mouseleave", function () {
+        startSlider();
+    });
+
+
+    showSlide(0);
+    startSlider();
+
+})();
+
+
+
+//==== <script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const track = document.querySelector(".epk-reviews-track");
+    const cards = document.querySelectorAll(".epk-review-card");
+    const nextBtn = document.querySelector(".epk-slider-next");
+    const prevBtn = document.querySelector(".epk-slider-prev");
+    const dots = document.querySelectorAll(".epk-review-dot");
+
+    if (!track || !cards.length) {
+        return;
+    }
+
+
+    let currentIndex = 0;
+    let autoSlide;
+
+
+    /* ==========================================
+       GET CARD WIDTH
+    ========================================== */
+
+    function getCardWidth() {
+
+        const card = cards[0];
+
+        if (!card) {
+            return 0;
+        }
+
+        const cardStyle =
+            window.getComputedStyle(card);
+
+        const gap =
+            parseFloat(cardStyle.marginRight) ||
+            parseFloat(
+                window.getComputedStyle(track).gap
+            ) ||
+            20;
+
+        return card.offsetWidth + gap;
+    }
+
+
+    /* ==========================================
+       UPDATE DOTS
+    ========================================== */
+
+    function updateDots(index) {
+
+        dots.forEach(function (dot, i) {
+
+            dot.classList.toggle(
+                "epk-review-dot-active",
+                i === index
+            );
+
+        });
+
+    }
+
+
+    /* ==========================================
+       MOVE SLIDER
+    ========================================== */
+
+    function goToSlide(index) {
+
+        const amount = getCardWidth();
+
+        const maxScroll =
+            track.scrollWidth -
+            track.clientWidth;
+
+        let position = index * amount;
+
+
+        if (position >= maxScroll) {
+
+            position = 0;
+            index = 0;
+
+        }
+
+
+        currentIndex = index;
+
+
+        track.scrollTo({
+
+            left: position,
+
+            behavior: "smooth"
+
+        });
+
+
+        updateDots(index);
+
+    }
+
+
+    /* ==========================================
+       NEXT
+    ========================================== */
+
+    function nextSlide() {
+
+        const amount = getCardWidth();
+
+        const maxScroll =
+            track.scrollWidth -
+            track.clientWidth;
+
+
+        if (
+            track.scrollLeft + amount
+            >= maxScroll - 10
+        ) {
+
+            currentIndex = 0;
+
+            track.scrollTo({
+
+                left: 0,
+
+                behavior: "smooth"
+
+            });
+
+        } else {
+
+            currentIndex++;
+
+            track.scrollBy({
+
+                left: amount,
+
+                behavior: "smooth"
+
+            });
+
+        }
+
+
+        updateDots(currentIndex);
+
+    }
+
+
+    /* ==========================================
+       PREVIOUS
+    ========================================== */
+
+    function previousSlide() {
+
+        const amount = getCardWidth();
+
+
+        if (track.scrollLeft <= 10) {
+
+            currentIndex =
+                cards.length - 1;
+
+            track.scrollTo({
+
+                left:
+                    track.scrollWidth -
+                    track.clientWidth,
+
+                behavior: "smooth"
+
+            });
+
+        } else {
+
+            currentIndex =
+                Math.max(
+                    0,
+                    currentIndex - 1
+                );
+
+            track.scrollBy({
+
+                left: -amount,
+
+                behavior: "smooth"
+
+            });
+
+        }
+
+
+        updateDots(currentIndex);
+
+    }
+
+
+    /* ==========================================
+       BUTTONS
+    ========================================== */
+
+    if (nextBtn) {
+
+        nextBtn.addEventListener(
+            "click",
+            function () {
+
+                nextSlide();
+
+                restartAutoSlide();
+
+            }
+        );
+
+    }
+
+
+    if (prevBtn) {
+
+        prevBtn.addEventListener(
+            "click",
+            function () {
+
+                previousSlide();
+
+                restartAutoSlide();
+
+            }
+        );
+
+    }
+
+
+    /* ==========================================
+       DOT NAVIGATION
+    ========================================== */
+
+    dots.forEach(function (dot, index) {
+
+        dot.addEventListener(
+            "click",
+            function () {
+
+                goToSlide(index);
+
+                restartAutoSlide();
+
+            }
+        );
+
+    });
+
+
+    /* ==========================================
+       AUTO SLIDER
+    ========================================== */
+
+    function startAutoSlide() {
+
+        autoSlide =
+            setInterval(
+                nextSlide,
+                5000
+            );
+
+    }
+
+
+    function stopAutoSlide() {
+
+        clearInterval(autoSlide);
+
+    }
+
+
+    function restartAutoSlide() {
+
+        stopAutoSlide();
+
+        startAutoSlide();
+
+    }
+
+
+    /* ==========================================
+       PAUSE ON HOVER
+    ========================================== */
+
+    track.addEventListener(
+        "mouseenter",
+        stopAutoSlide
+    );
+
+    track.addEventListener(
+        "mouseleave",
+        startAutoSlide
+    );
+
+
+    /* ==========================================
+       MOBILE TOUCH
+    ========================================== */
+
+    track.addEventListener(
+        "touchstart",
+        stopAutoSlide,
+        { passive: true }
+    );
+
+    track.addEventListener(
+        "touchend",
+        startAutoSlide,
+        { passive: true }
+    );
+
+
+    /* ==========================================
+       START
+    ========================================== */
+
+    startAutoSlide();
+
+});
+
+
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  const filterButtons = document.querySelectorAll(".epk-filter-btn");
+  const galleryCards = document.querySelectorAll(".epk-gallery-card");
+
+  filterButtons.forEach(function (button) {
+
+    button.addEventListener("click", function () {
+
+      const selectedFilter = this.getAttribute("data-filter");
+
+
+      /* Active button */
+
+      filterButtons.forEach(function (btn) {
+        btn.classList.remove("epk-filter-active");
+      });
+
+      this.classList.add("epk-filter-active");
+
+
+      /* Filter gallery */
+
+      galleryCards.forEach(function (card) {
+
+        const category = card.getAttribute("data-category");
+
+        card.classList.remove("epk-gallery-hidden");
+
+        if (
+          selectedFilter !== "all" &&
+          category !== selectedFilter
+        ) {
+          card.classList.add("epk-gallery-hidden");
+        }
+
+      });
+
+    });
+
+  });
+
+});
+
+
+
+(function () {
+
+    "use strict";
+
+    const epkgxOpenButtons =
+        document.querySelectorAll(".epkgx-gallery-open");
+
+    const epkgxLightbox =
+        document.getElementById("epkgxLightbox");
+
+    const epkgxImage =
+        document.getElementById("epkgxLightboxImage");
+
+    const epkgxTitle =
+        document.getElementById("epkgxLightboxText");
+
+    const epkgxClose =
+        document.querySelector(".epkgx-lightbox-close");
+
+    const epkgxPrev =
+        document.querySelector(".epkgx-lightbox-prev");
+
+    const epkgxNext =
+        document.querySelector(".epkgx-lightbox-next");
+
+
+    let epkgxCurrent = 0;
+
+
+    function epkgxShowImage(index) {
+
+        if (!epkgxOpenButtons.length) return;
+
+        if (index >= epkgxOpenButtons.length) {
+            index = 0;
+        }
+
+        if (index < 0) {
+            index = epkgxOpenButtons.length - 1;
+        }
+
+        epkgxCurrent = index;
+
+        const button = epkgxOpenButtons[epkgxCurrent];
+
+        epkgxImage.src = button.getAttribute("data-image");
+        epkgxImage.alt = button.getAttribute("data-title");
+        epkgxTitle.textContent =
+            button.getAttribute("data-title");
+
+        epkgxLightbox.classList.add(
+            "epkgx-lightbox-active"
+        );
+
+        document.body.style.overflow = "hidden";
+    }
+
+
+    function epkgxCloseGallery() {
+
+        epkgxLightbox.classList.remove(
+            "epkgx-lightbox-active"
+        );
+
+        document.body.style.overflow = "";
+
+        setTimeout(function () {
+            epkgxImage.src = "";
+        }, 250);
+    }
+
+
+    epkgxOpenButtons.forEach(function (button, index) {
+
+        button.addEventListener("click", function (event) {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            epkgxShowImage(index);
+
+        });
+
+    });
+
+
+    epkgxClose.addEventListener(
+        "click",
+        epkgxCloseGallery
+    );
+
+
+    epkgxNext.addEventListener(
+        "click",
+        function () {
+            epkgxShowImage(epkgxCurrent + 1);
+        }
+    );
+
+
+    epkgxPrev.addEventListener(
+        "click",
+        function () {
+            epkgxShowImage(epkgxCurrent - 1);
+        }
+    );
+
+
+    epkgxLightbox.addEventListener(
+        "click",
+        function (event) {
+
+            if (
+                event.target === epkgxLightbox
+            ) {
+                epkgxCloseGallery();
+            }
+
+        }
+    );
+
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (
+                !epkgxLightbox.classList.contains(
+                    "epkgx-lightbox-active"
+                )
+            ) {
+                return;
+            }
+
+            if (event.key === "Escape") {
+                epkgxCloseGallery();
+            }
+
+            if (event.key === "ArrowRight") {
+                epkgxShowImage(epkgxCurrent + 1);
+            }
+
+            if (event.key === "ArrowLeft") {
+                epkgxShowImage(epkgxCurrent - 1);
+            }
+
+        }
+    );
+
+})();
+
+
+
+
